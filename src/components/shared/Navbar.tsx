@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Hexagon, Play } from "lucide-react";
+import { Menu, X, Clapperboard } from "lucide-react";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -18,25 +17,20 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#05090f]">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="relative flex items-center justify-center">
-            <Hexagon
-              size={28}
-              className="text-orange-500"
-              strokeWidth={2.5}
-            />
-            <Play
-              size={11}
-              fill="currentColor"
-              className="absolute text-orange-500"
-            />
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 shadow-lg shadow-orange-500/20">
+            <Clapperboard size={24} className="text-white" strokeWidth={2.2} />
           </div>
 
-          <span className="text-xl font-bold tracking-tight text-white">
-            Studio<span className="text-orange-500">Space</span>
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xl font-extrabold tracking-tight text-white">
+              Studio<span className="text-orange-500">Space</span>
+            </span>
+            <span className="text-[9px] font-medium uppercase tracking-[2px] text-gray-400">
+              Book Your Creative Space
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
