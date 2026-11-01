@@ -1,8 +1,8 @@
-
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   User,
   Mail,
@@ -10,12 +10,86 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  LoaderCircle,
 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignupPage() {
+  const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Email Signup
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { data, error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        callbackURL: "/",
+      });
+
+      if (error) {
+        setError(error.message || "Failed to create account.");
+        return;
+      }
+
+      if (data) {
+        router.push("/");
+        router.refresh();
+      }
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google Signup
+  const handleGoogleSignup = async () => {
+    try {
+      setError("");
+      setGoogleLoading(true);
+
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (err) {
+      console.error("Google signup error:", err);
+      setError("Google signup failed. Please try again.");
+      setGoogleLoading(false);
+    }
+  };
 
   return (
     <section className="min-h-[85vh] bg-[#05090f] px-4 py-12">
@@ -30,6 +104,7 @@ export default function SignupPage() {
                 "url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1200')",
             }}
           />
+
           <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-orange-950/70" />
 
           <div className="relative z-10">
@@ -79,13 +154,29 @@ export default function SignupPage() {
               </p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                {error}
+              </div>
+            )}
+
             {/* Google Signup */}
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 py-3.5 font-medium text-white transition hover:bg-white/10"
+              onClick={handleGoogleSignup}
+              disabled={googleLoading || loading}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 py-3.5 font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <FcGoogle className="h-5 w-5" />
-              Continue with Google
+              {googleLoading ? (
+                <LoaderCircle className="h-5 w-5 animate-spin" />
+              ) : (
+                <FcGoogle className="h-5 w-5" />
+              )}
+
+              {googleLoading
+                ? "Connecting to Google..."
+                : "Continue with Google"}
             </button>
 
             <div className="my-7 flex items-center gap-4">
@@ -96,7 +187,8 @@ export default function SignupPage() {
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
-            <form className="space-y-5">
+            {/* Signup Form */}
+            <form onSubmit={handleSignup} className="space-y-5">
 
               {/* Name */}
               <div>
@@ -106,11 +198,13 @@ export default function SignupPage() {
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#080d15] px-4 transition focus-within:border-orange-500">
                   <User className="h-5 w-5 text-gray-500" />
+
                   <input
                     type="text"
                     name="name"
                     placeholder="Enter your full name"
                     required
+                    autoComplete="name"
                     className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-gray-600"
                   />
                 </div>
@@ -124,11 +218,13 @@ export default function SignupPage() {
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#080d15] px-4 transition focus-within:border-orange-500">
                   <Mail className="h-5 w-5 text-gray-500" />
+
                   <input
                     type="email"
                     name="email"
                     placeholder="you@example.com"
                     required
+                    autoComplete="email"
                     className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-gray-600"
                   />
                 </div>
@@ -142,12 +238,14 @@ export default function SignupPage() {
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#080d15] px-4 transition focus-within:border-orange-500">
                   <LockKeyhole className="h-5 w-5 text-gray-500" />
+
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Create a password"
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-gray-600"
                   />
 
@@ -174,12 +272,14 @@ export default function SignupPage() {
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#080d15] px-4 transition focus-within:border-orange-500">
                   <LockKeyhole className="h-5 w-5 text-gray-500" />
+
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm your password"
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-gray-600"
                   />
 
@@ -207,6 +307,7 @@ export default function SignupPage() {
                   required
                   className="mt-1 accent-orange-500"
                 />
+
                 <span>
                   I agree to the{" "}
                   <Link
@@ -229,10 +330,20 @@ export default function SignupPage() {
               {/* Submit */}
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3.5 font-semibold text-white transition hover:bg-orange-600"
+                disabled={loading || googleLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3.5 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Create account
-                <ArrowRight className="h-5 w-5" />
+                {loading ? (
+                  <>
+                    <LoaderCircle className="h-5 w-5 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    Create account
+                    <ArrowRight className="h-5 w-5" />
+                  </>
+                )}
               </button>
             </form>
 

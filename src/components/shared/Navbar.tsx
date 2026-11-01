@@ -4,7 +4,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Clapperboard } from "lucide-react";
+import {
+  Menu,
+  X,
+  Clapperboard,
+  User,
+  ChevronDown,
+  LogOut,
+  Settings,
+} from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -15,31 +24,39 @@ const navLinks = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
 
+  // Better Auth Session
+  const { data: session, isPending } = authClient.useSession();
+
+  const user = session?.user;
+
+  // Navigation
   const handleNavigation = (href: string) => {
     setIsOpen(false);
 
     const id = href.split("#")[1];
 
-    // Normal route navigation
     if (!id) {
       router.push(href);
       return;
     }
 
-    // If already on homepage, scroll without route navigation
     if (pathname === "/") {
       smoothScrollTo(id);
       return;
     }
 
-    // Navigate to homepage first, then scroll
     sessionStorage.setItem("scrollTarget", id);
     router.push("/");
   };
 
+  // Smooth Scroll
   const smoothScrollTo = (id: string) => {
     const target = document.getElementById(id);
 
@@ -76,6 +93,131 @@ export default function Navbar() {
 
     requestAnimationFrame(animateScroll);
   };
+
+  // Sign Out
+  const handleSignOut = async () => {
+    try {
+      setSigningOut(true);
+
+      const { error } = await authClient.signOut();
+
+      if (error) {
+        console.error("Sign out error:", error);
+        return;
+      }
+
+      setProfileOpen(false);
+      setMobileProfileOpen(false);
+      setIsOpen(false);
+
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
+  // Profile Dropdown
+  const ProfileDropdown = ({ mobile = false }: { mobile?: boolean }) => (
+    <div className="relative">
+      <button
+        onClick={() =>
+          mobile
+            ? setMobileProfileOpen(!mobileProfileOpen)
+            : setProfileOpen(!profileOpen)
+        }
+        className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white transition hover:border-orange-500/50 hover:bg-white/10"
+      >
+        {user?.image ? (
+          <img
+            src={user.image}
+            alt="Profile"
+            className="h-9 w-9 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-white">
+            <User size={19} />
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1 text-left">
+          <p className="truncate text-sm font-semibold">
+            {user?.name || "My Account"}
+          </p>
+          <p className="text-xs text-gray-400">My Profile</p>
+        </div>
+
+        <ChevronDown
+          size={17}
+          className={`text-gray-400 transition-transform ${
+            (mobile ? mobileProfileOpen : profileOpen)
+              ? "rotate-180"
+              : ""
+          }`}
+        />
+      </button>
+
+      {(mobile ? mobileProfileOpen : profileOpen) && (
+        <div
+          className={`z-50 mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b111b] shadow-2xl ${
+            mobile
+              ? "relative"
+              : "absolute right-0 top-full mt-3 w-64"
+          }`}
+        >
+          <div className="border-b border-white/10 px-4 py-4">
+            <p className="truncate text-sm font-semibold text-white">
+              {user?.name}
+            </p>
+            <p className="truncate text-xs text-gray-400">
+              {user?.email}
+            </p>
+          </div>
+
+          <div className="p-2">
+            <Link
+              href="/profile"
+              onClick={() => {
+                setProfileOpen(false);
+                setMobileProfileOpen(false);
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-orange-500"
+            >
+              <User size={17} />
+              My Profile
+            </Link>
+
+            <Link
+              href="/settings"
+              onClick={() => {
+                setProfileOpen(false);
+                setMobileProfileOpen(false);
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-orange-500"
+            >
+              <Settings size={17} />
+              Settings
+            </Link>
+
+            <div className="my-2 border-t border-white/10" />
+
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+            >
+              <LogOut size={17} />
+              {signingOut ? "Signing out..." : "Sign Out"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#05090f]">
@@ -119,21 +261,29 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Desktop Auth Buttons */}
+        {/* Desktop Auth */}
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/login"
-            className="rounded-lg border border-white/20 px-5 py-2 text-sm font-semibold text-white transition-all hover:border-orange-500 hover:text-orange-500"
-          >
-            Login
-          </Link>
+          {isPending ? (
+            <div className="h-10 w-28 animate-pulse rounded-xl bg-white/5" />
+          ) : user ? (
+            <ProfileDropdown />
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-lg border border-white/20 px-5 py-2 text-sm font-semibold text-white transition-all hover:border-orange-500 hover:text-orange-500"
+              >
+                Login
+              </Link>
 
-          <Link
-            href="/signup"
-            className="rounded-lg bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-600"
-          >
-            Sign Up
-          </Link>
+              <Link
+                href="/signup"
+                className="rounded-lg bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-600"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -151,6 +301,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="border-t border-white/10 bg-[#05090f] px-5 py-5 md:hidden">
           <div className="flex flex-col gap-5">
+
             {navLinks.map((link) => (
               <button
                 key={link.name}
@@ -161,22 +312,30 @@ export default function Navbar() {
               </button>
             ))}
 
-            <div className="flex gap-3 border-t border-white/10 pt-5">
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="flex-1 rounded-lg border border-white/20 py-2.5 text-center text-sm font-semibold text-white hover:border-orange-500 hover:text-orange-500"
-              >
-                Login
-              </Link>
+            <div className="border-t border-white/10 pt-5">
+              {isPending ? (
+                <div className="h-12 animate-pulse rounded-xl bg-white/5" />
+              ) : user ? (
+                <ProfileDropdown mobile />
+              ) : (
+                <div className="flex gap-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 rounded-lg border border-white/20 py-2.5 text-center text-sm font-semibold text-white hover:border-orange-500 hover:text-orange-500"
+                  >
+                    Login
+                  </Link>
 
-              <Link
-                href="/signup"
-                onClick={() => setIsOpen(false)}
-                className="flex-1 rounded-lg bg-orange-500 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
-              >
-                Sign Up
-              </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 rounded-lg bg-orange-500 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,13 +1,72 @@
+
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Mail,
   LockKeyhole,
   Eye,
+  EyeOff,
   ArrowRight,
+  LoaderCircle,
 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setError("");
+    setLoading(true);
+
+    try {
+      const { error } = await authClient.signIn.email({
+        email,
+        password,
+        callbackURL: "/",
+      });
+
+      if (error) {
+        setError(error.message || "Invalid email or password.");
+        return;
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setGoogleLoading(true);
+
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch {
+      setError("Google login failed. Please try again.");
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <section className="flex min-h-[750px] items-center justify-center bg-[#05090f] px-4 py-12">
       <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-[#0b1420] shadow-2xl md:grid-cols-2">
@@ -64,7 +123,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <form className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-5">
 
               {/* Email */}
               <div>
@@ -77,6 +136,10 @@ export default function LoginPage() {
 
                   <input
                     type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     className="w-full bg-transparent py-4 text-sm text-white outline-none placeholder:text-gray-500"
                   />
@@ -93,12 +156,27 @@ export default function LoginPage() {
                   <LockKeyhole className="h-5 w-5 text-gray-500" />
 
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     className="w-full bg-transparent py-4 text-sm text-white outline-none placeholder:text-gray-500"
                   />
 
-                  <Eye className="h-5 w-5 cursor-pointer text-gray-500" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-500 hover:text-white"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -120,15 +198,31 @@ export default function LoginPage() {
                 </Link>
               </div>
 
+              {/* Error */}
+              {error && (
+                <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                  {error}
+                </p>
+              )}
+
               {/* Login Button */}
               <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-4 font-semibold text-white transition hover:bg-orange-600"
+                type="submit"
+                disabled={loading || googleLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-4 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Login
-                <ArrowRight className="h-4 w-4" />
+                {loading ? (
+                  <>
+                    <LoaderCircle className="h-5 w-5 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  <>
+                    Login
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
-
             </form>
 
             {/* Divider */}
@@ -143,10 +237,21 @@ export default function LoginPage() {
             {/* Google Button */}
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-[#111e2d] py-4 text-sm font-medium text-white transition hover:bg-[#192a3c]"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading || loading}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-[#111e2d] py-4 text-sm font-medium text-white transition hover:bg-[#192a3c] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <FcGoogle className="h-5 w-5" />
-              Continue with Google
+              {googleLoading ? (
+                <>
+                  <LoaderCircle className="h-5 w-5 animate-spin" />
+                  Connecting to Google...
+                </>
+              ) : (
+                <>
+                  <FcGoogle className="h-5 w-5" />
+                  Continue with Google
+                </>
+              )}
             </button>
 
             <p className="mt-7 text-center text-xs leading-6 text-gray-500">
