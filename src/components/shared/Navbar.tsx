@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -57,7 +57,7 @@ export default function Navbar() {
   };
 
   // Smooth Scroll
-  const smoothScrollTo = (id: string) => {
+  const smoothScrollTo = useCallback((id: string) => {
     const target = document.getElementById(id);
 
     if (!target) return;
@@ -92,7 +92,31 @@ export default function Navbar() {
     };
 
     requestAnimationFrame(animateScroll);
-  };
+  }, []);
+
+  // Resume a section scroll requested before navigating to the home page
+  useEffect(() => {
+    if (pathname !== "/") return;
+
+    const id = sessionStorage.getItem("scrollTarget");
+
+    if (!id) return;
+
+    sessionStorage.removeItem("scrollTarget");
+
+    let frame = 0;
+
+    const attempt = () => {
+      if (document.getElementById(id)) {
+        smoothScrollTo(id);
+        return;
+      }
+
+      if (frame++ < 30) requestAnimationFrame(attempt);
+    };
+
+    requestAnimationFrame(attempt);
+  }, [pathname, smoothScrollTo]);
 
   // Sign Out
   const handleSignOut = async () => {
