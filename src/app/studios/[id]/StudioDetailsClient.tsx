@@ -382,7 +382,7 @@ export default function StudioDetailsClient({
 
   const images = studio.images?.length
     ? studio.images
-    : ["/images/studio-placeholder.jpg"];
+    : ["/images/studio-placeholder.svg"];
 
   return (
     <main className="min-h-screen bg-[#080d16] pb-20 text-white">
