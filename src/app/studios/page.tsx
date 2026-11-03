@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   MapPin,
@@ -72,6 +72,9 @@ const imageGradients = [
 
 export default function ExploreStudiosPage() {
   const [studios, setStudios] = useState<Studio[]>([]);
+  // Locations seen so far. Kept separate from `studios` so the dropdown does
+  // not shrink to the current filter's single value.
+  const [locations, setLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -150,7 +153,19 @@ export default function ExploreStudiosPage() {
           );
         }
 
-        setStudios(result.data || []);
+        const nextStudios: Studio[] = result.data || [];
+
+        setStudios(nextStudios);
+
+        setLocations((previous) => {
+          const merged = new Set(previous);
+
+          for (const studio of nextStudios) {
+            if (studio.location) merged.add(studio.location);
+          }
+
+          return [...merged].sort((a, b) => a.localeCompare(b));
+        });
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           return;
@@ -181,15 +196,6 @@ export default function ExploreStudiosPage() {
     sortBy,
     retryKey,
   ]);
-
-  // Locations from currently fetched studios
-  const locations = useMemo(
-    () =>
-      [...new Set(
-        studios.map((studio) => studio.location).filter(Boolean)
-      )],
-    [studios]
-  );
 
   // Backend already filters and sorts
   const filteredStudios = studios;
