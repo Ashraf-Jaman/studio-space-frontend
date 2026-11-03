@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Search,
@@ -71,7 +72,9 @@ const imageGradients = [
   "from-emerald-950 via-teal-900 to-slate-950",
 ];
 
-export default function ExploreStudiosPage() {
+function StudiosContent() {
+  const searchParams = useSearchParams();
+
   const [studios, setStudios] = useState<Studio[]>([]);
   // Locations seen so far. Kept separate from `studios` so the dropdown does
   // not shrink to the current filter's single value.
@@ -79,7 +82,9 @@ export default function ExploreStudiosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () => searchParams.get("search") ?? ""
+  );
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState(MAX_PRICE);
   const [rating, setRating] = useState("all");
@@ -648,5 +653,31 @@ export default function ExploreStudiosPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function ExploreStudiosPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#050c16] px-4 py-8 text-white sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1500px] animate-pulse">
+            <div className="h-8 w-72 rounded bg-slate-800" />
+            <div className="mt-3 h-4 w-56 rounded bg-slate-800/70" />
+            <div className="mt-8 h-12 rounded-xl bg-slate-800/60" />
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-72 rounded-2xl bg-slate-800/40"
+                />
+              ))}
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <StudiosContent />
+    </Suspense>
   );
 }
