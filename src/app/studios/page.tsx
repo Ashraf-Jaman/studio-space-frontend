@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Search,
   MapPin,
@@ -592,12 +593,12 @@ export default function ExploreStudiosPage() {
                         </span>
                       </div>
 
-                      <a
+                      <Link
                         href={`/studios/${studio._id}`}
                         className="mt-4 block w-full rounded-lg bg-orange-500 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-orange-600"
                       >
                         View Details
-                      </a>
+                      </Link>
                     </div>
                   </article>
                 ))}
