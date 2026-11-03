@@ -76,6 +76,10 @@ function formatDate(date: string) {
   });
 }
 
+function formatDuration(hours: number) {
+  return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+}
+
 export default function StudioDetailsClient({
   studioId,
 }: {
@@ -166,6 +170,7 @@ export default function StudioDetailsClient({
           ? reviewJson.data
           : []
       );
+      setReviewPage(0);
     } catch (error) {
       console.error("Studio fetch error:", error);
       setNotice(
@@ -756,14 +761,14 @@ export default function StudioDetailsClient({
                   <div className="flex justify-between text-sm text-gray-400">
                     <span>Duration</span>
                     <span className="text-white">
-                      {duration > 0 ? `${duration} hours` : "—"}
+                      {duration > 0 ? formatDuration(duration) : "—"}
                     </span>
                   </div>
 
                   <div className="mt-3 flex justify-between text-sm text-gray-400">
                     <span>
                       ৳{studio.pricePerHour.toLocaleString("en-BD")} ×{" "}
-                      {duration} hours
+                      {formatDuration(duration)}
                     </span>
                     <span className="text-white">
                       ৳{totalPrice.toLocaleString("en-BD")}
