@@ -34,6 +34,10 @@ type Studio = {
   createdAt?: string;
 };
 
+// Top of the price slider. Treated as "no upper bound" so that studios priced
+// above it are never filtered out (matches the "৳5,000+" label).
+const MAX_PRICE = 5000;
+
 const categories = [
   "Photo Studios",
   "Sound Studios",
@@ -73,7 +77,7 @@ export default function ExploreStudiosPage() {
 
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState(5000);
+  const [maxPrice, setMaxPrice] = useState(MAX_PRICE);
   const [rating, setRating] = useState("all");
   const [location, setLocation] = useState("all");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -110,7 +114,10 @@ export default function ExploreStudiosPage() {
         }
 
         params.set("minPrice", "0");
-        params.set("maxPrice", String(maxPrice));
+
+        if (maxPrice < MAX_PRICE) {
+          params.set("maxPrice", String(maxPrice));
+        }
 
         if (selectedAmenities.length > 0) {
           params.set("amenities", selectedAmenities.join(","));
@@ -205,7 +212,7 @@ export default function ExploreStudiosPage() {
 
   const clearFilters = () => {
     setSelectedCategories([]);
-    setMaxPrice(5000);
+    setMaxPrice(MAX_PRICE);
     setRating("all");
     setLocation("all");
     setSelectedAmenities([]);
@@ -256,7 +263,7 @@ export default function ExploreStudiosPage() {
         <input
           type="range"
           min="0"
-          max="5000"
+          max={MAX_PRICE}
           step="100"
           value={maxPrice}
           onChange={(e) => setMaxPrice(Number(e.target.value))}
