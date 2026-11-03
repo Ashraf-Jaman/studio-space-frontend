@@ -341,7 +341,7 @@ export default function StudioDetailsClient({
       }
 
       setNotice("Booking request submitted successfully!");
-      router.push("/dashboard/bookings");
+      setBookingError("");
     } catch (error) {
       setBookingError(
         error instanceof Error ? error.message : "Booking failed."
