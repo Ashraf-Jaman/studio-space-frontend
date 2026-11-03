@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Camera,
   MapPin,
@@ -27,11 +28,23 @@ const amenitiesList = [
 ];
 
 export default function CreateStudioForm() {
+  const router = useRouter();
+
+  const { data: session, isPending } = authClient.useSession();
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const [amenities, setAmenities] = useState<string[]>([]);
+
+  // This page is owner-only; send anonymous visitors to login up front instead
+  // of letting them fill in the whole form before the token call fails.
+  useEffect(() => {
+    if (!isPending && !session?.user) {
+      router.replace("/login");
+    }
+  }, [isPending, session, router]);
 
   const toggleAmenity = (value: string) => {
     setAmenities((prev) =>
@@ -43,6 +56,11 @@ export default function CreateStudioForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!session?.user) {
+      router.replace("/login");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
@@ -88,7 +106,7 @@ try {
   
   const data = await res.json();
 
-  if (!res.ok) {
+  if (!res.ok || !data.success) {
     throw new Error(data.message || "Failed to create studio");
   }
 
