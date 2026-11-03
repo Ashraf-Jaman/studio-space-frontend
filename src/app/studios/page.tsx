@@ -79,6 +79,8 @@ export default function ExploreStudiosPage() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("popular");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  // Bumping this re-runs the fetch effect (used by the "Try Again" button).
+  const [retryKey, setRetryKey] = useState(0);
 
   // Fetch studios from Backend with filters
   useEffect(() => {
@@ -170,6 +172,7 @@ export default function ExploreStudiosPage() {
     location,
     selectedAmenities,
     sortBy,
+    retryKey,
   ]);
 
   // Locations from currently fetched studios
@@ -464,7 +467,7 @@ export default function ExploreStudiosPage() {
                 <p className="text-red-400">{error}</p>
 
                 <button
-                  onClick={() => setSearch((value) => value)}
+                  onClick={() => setRetryKey((key) => key + 1)}
                   className="mt-4 rounded-lg bg-orange-500 px-5 py-2 text-sm font-semibold text-white"
                 >
                   Try Again
