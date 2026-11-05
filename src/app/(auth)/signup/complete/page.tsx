@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 export default function CompleteGoogleSignupPage() {
+  return (
+    <Suspense fallback={<SignupCompletionLoading />}>
+      <CompleteGoogleSignup />
+    </Suspense>
+  );
+}
+
+function CompleteGoogleSignup() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -25,6 +33,10 @@ export default function CompleteGoogleSignupPage() {
     };
   }, [router, searchParams]);
 
+  return <SignupCompletionLoading />;
+}
+
+function SignupCompletionLoading() {
   return (
     <main className="flex min-h-[70vh] items-center justify-center bg-[#05090f] px-4 text-center text-white">
       <div>
