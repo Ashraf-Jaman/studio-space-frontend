@@ -11,7 +11,6 @@ import {
   User,
   ChevronDown,
   LogOut,
-  Settings,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -35,6 +34,24 @@ export default function Navbar() {
   const { data: session, isPending } = authClient.useSession();
 
   const user = session?.user;
+
+  useEffect(() => {
+    setProfileOpen(false);
+    setMobileProfileOpen(false);
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-profile-dropdown]")) {
+        setProfileOpen(false);
+        setMobileProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, []);
 
   // Navigation
   const handleNavigation = (href: string) => {
@@ -145,7 +162,7 @@ export default function Navbar() {
 
   // Profile Dropdown
   const ProfileDropdown = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className="relative">
+    <div className="relative" data-profile-dropdown>
       <button
         onClick={() =>
           mobile
@@ -191,15 +208,6 @@ export default function Navbar() {
               : "absolute right-0 top-full mt-3 w-64"
           }`}
         >
-          <div className="border-b border-white/10 px-4 py-4">
-            <p className="truncate text-sm font-semibold text-white">
-              {user?.name}
-            </p>
-            <p className="truncate text-xs text-gray-400">
-              {user?.email}
-            </p>
-          </div>
-
           <div className="p-2">
             <Link
               href="/profile"
@@ -212,19 +220,6 @@ export default function Navbar() {
             >
               <User size={17} />
               My Profile
-            </Link>
-
-            <Link
-              href="/settings"
-              onClick={() => {
-                setProfileOpen(false);
-                setMobileProfileOpen(false);
-                setIsOpen(false);
-              }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-orange-500"
-            >
-              <Settings size={17} />
-              Settings
             </Link>
 
             <div className="my-2 border-t border-white/10" />

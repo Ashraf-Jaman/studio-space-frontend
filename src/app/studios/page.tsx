@@ -56,6 +56,11 @@ const categoryMap: Record<string, string> = {
   "Art Workshops": "Art",
 };
 
+// Backend category values (e.g. `?category=Music`) back to filter labels.
+const categoryFromValue: Record<string, string> = Object.fromEntries(
+  Object.entries(categoryMap).map(([label, value]) => [value, label])
+);
+
 const amenityOptions = [
   { name: "Lighting", icon: Lightbulb },
   { name: "WiFi", icon: Wifi },
@@ -85,7 +90,18 @@ function StudiosContent() {
   const [search, setSearch] = useState(
     () => searchParams.get("search") ?? ""
   );
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    () => {
+      const requested = searchParams.get("category");
+
+      if (!requested) return [];
+
+      return requested
+        .split(",")
+        .map((value) => categoryFromValue[value.trim()])
+        .filter((label): label is string => Boolean(label));
+    }
+  );
   const [maxPrice, setMaxPrice] = useState(MAX_PRICE);
   const [rating, setRating] = useState("all");
   const [location, setLocation] = useState("all");

@@ -3,7 +3,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
+  ArrowLeft,
   Camera,
   MapPin,
   DollarSign,
@@ -31,20 +33,22 @@ export default function CreateStudioForm() {
   const router = useRouter();
 
   const { data: session, isPending } = authClient.useSession();
+  const role = (session?.user as { role?: string } | undefined)?.role;
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const [amenities, setAmenities] = useState<string[]>([]);
 
-  // This page is owner-only; send anonymous visitors to login up front instead
-  // of letting them fill in the whole form before the token call fails.
+  // Only studio owners may add a listing; anonymous users sign in and
+  // customers return to their dashboard.
   useEffect(() => {
     if (!isPending && !session?.user) {
       router.replace("/login");
+    } else if (!isPending && role && role !== "studio_owner" && role !== "admin") {
+      router.replace("/dashboard");
     }
-  }, [isPending, session, router]);
+  }, [isPending, session, role, router]);
 
   const toggleAmenity = (value: string) => {
     setAmenities((prev) =>
@@ -61,9 +65,12 @@ export default function CreateStudioForm() {
       router.replace("/login");
       return;
     }
+    if (role !== "studio_owner" && role !== "admin") {
+      router.replace("/dashboard");
+      return;
+    }
 
     setLoading(true);
-    setMessage("");
     setError("");
 
     const form = e.currentTarget;
@@ -111,9 +118,9 @@ try {
   }
 
   
-  setMessage("Studio created successfully!");
-  form.reset();
-  setAmenities([]);
+  // The new studio now appears under "Bookings Received", so take the owner
+  // straight to their dashboard instead of leaving an inline success message.
+  router.push("/profile/bookings");
 
 } catch (err) {
   setError(
@@ -125,8 +132,22 @@ try {
 
   };
 
+  if (isPending || !session?.user || (role !== "studio_owner" && role !== "admin")) {
+    return <main className="min-h-screen bg-[#05090f]" aria-label="Loading studio form" />;
+  }
+
   return (
     <section className="min-h-screen bg-[#05090f] px-4 py-12">
+      <div className="mx-auto mb-5 max-w-6xl">
+        <Link
+          href="/profile/bookings"
+          className="flex w-fit items-center gap-2 text-sm text-gray-400 transition hover:text-white"
+        >
+          <ArrowLeft size={17} />
+          Back to My Bookings
+        </Link>
+      </div>
+
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-[#0b111b] shadow-2xl md:grid-cols-[0.8fr_1.5fr]">
 
         {/* Left Side */}
@@ -342,12 +363,6 @@ try {
             </div>
 
             {/* Messages */}
-            {message && (
-              <p className="rounded-lg border border-green-500/20 bg-green-500/10 p-3 text-sm text-green-400">
-                {message}
-              </p>
-            )}
-
             {error && (
               <p className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
                 {error}

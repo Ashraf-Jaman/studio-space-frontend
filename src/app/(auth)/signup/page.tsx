@@ -20,6 +20,7 @@ export default function SignupPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [role, setRole] = useState<"customer" | "studio_owner">("customer");
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -36,6 +37,7 @@ export default function SignupPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
+    const role = formData.get("role") as "customer" | "studio_owner";
 
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
@@ -54,7 +56,8 @@ export default function SignupPage() {
         name,
         email,
         password,
-        callbackURL: "/",
+        role,
+        callbackURL: "/dashboard",
       });
 
       if (error) {
@@ -63,7 +66,7 @@ export default function SignupPage() {
       }
 
       if (data) {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {
@@ -82,7 +85,8 @@ export default function SignupPage() {
 
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/dashboard",
+        newUserCallbackURL: `/signup/complete?role=${role}`,
       });
     } catch (err) {
       console.error("Google signup error:", err);
@@ -229,6 +233,51 @@ export default function SignupPage() {
                   />
                 </div>
               </div>
+
+              {/* Account role */}
+              <fieldset>
+                <legend className="mb-2 block text-sm font-medium text-gray-300">
+                  I want to join as
+                </legend>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#080d15] p-4 transition has-checked:border-orange-500 has-checked:bg-orange-500/10">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="customer"
+                      checked={role === "customer"}
+                      onChange={() => setRole("customer")}
+                      className="mt-1 accent-orange-500"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-white">
+                        Customer
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-gray-400">
+                        Find and book a studio
+                      </span>
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#080d15] p-4 transition has-checked:border-orange-500 has-checked:bg-orange-500/10">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="studio_owner"
+                      checked={role === "studio_owner"}
+                      onChange={() => setRole("studio_owner")}
+                      className="mt-1 accent-orange-500"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-white">
+                        Studio owner
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-gray-400">
+                        List and manage a studio
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
 
               {/* Password */}
               <div>
