@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_URL = "http://localhost:4000/api/studios";
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/studios`;
 
 type Studio = {
   _id: string;
@@ -36,8 +36,6 @@ type Studio = {
   createdAt?: string;
 };
 
-// Top of the price slider. Treated as "no upper bound" so that studios priced
-// above it are never filtered out (matches the "৳5,000+" label).
 const MAX_PRICE = 5000;
 
 const categories = [

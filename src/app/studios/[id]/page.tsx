@@ -6,9 +6,7 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// `params` is runtime data, so it must be read inside a Suspense boundary for
-// this route to prerender (cacheComponents). The client component already
-// renders its own loading state once the id is known.
+
 async function StudioDetails({ params }: PageProps) {
   const { id } = await params;
 

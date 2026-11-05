@@ -42,7 +42,5 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
         }, 
     },
-    // Registers GET /api/auth/token (+ /jwks). The client calls
-    // authClient.token() and the backend verifies the resulting Bearer JWT.
     plugins: [jwt()],
 });
