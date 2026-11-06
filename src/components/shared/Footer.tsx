@@ -12,17 +12,14 @@ import {
 const quickLinks = [
   { name: "Home", href: "/" },
   { name: "Explore Studios", href: "/studios" },
-  { name: "How It Works", href: "/how-it-works" },
-  { name: "About Us", href: "/about" },
-  { name: "Contact", href: "/contact" },
 ];
 
 const categories = [
-  { name: "Photo Studios", href: "/studios/photo" },
-  { name: "Sound Systems", href: "/studios/sound" },
-  { name: "Podcast Rooms", href: "/studios/podcast" },
-  { name: "Music Studios", href: "/studios/music" },
-  { name: "Art Workshops", href: "/studios/art" },
+  { name: "Photo Studios", href: "/studios?category=Photography" },
+  { name: "Sound Studios", href: "/studios?category=Sound" },
+  { name: "Podcast Rooms", href: "/studios?category=Podcast" },
+  { name: "Music Studios", href: "/studios?category=Music" },
+  { name: "Art Workshops", href: "/studios?category=Art" },
 ];
 
 const socialLinks = [
@@ -152,22 +149,6 @@ export default function Footer() {
           <p>
             © 2026 StudioSpace. All rights reserved.
           </p>
-
-          <div className="flex gap-5">
-            <Link
-              href="/terms"
-              className="transition hover:text-orange-500"
-            >
-              Terms of Service
-            </Link>
-
-            <Link
-              href="/privacy"
-              className="transition hover:text-orange-500"
-            >
-              Privacy Policy
-            </Link>
-          </div>
 
         </div>
 

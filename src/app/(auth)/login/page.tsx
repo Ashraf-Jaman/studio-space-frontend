@@ -189,13 +189,6 @@ export default function LoginPage() {
                   />
                   Remember me
                 </label>
-
-                <Link
-                  href="/forgot-password"
-                  className="text-orange-400 hover:text-orange-300"
-                >
-                  Forgot password?
-                </Link>
               </div>
 
               {/* Error */}
@@ -255,14 +248,8 @@ export default function LoginPage() {
             </button>
 
             <p className="mt-7 text-center text-xs leading-6 text-gray-500">
-              By continuing, you agree to our{" "}
-              <Link href="/terms" className="text-orange-400">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="text-orange-400">
-                Privacy Policy
-              </Link>.
+              By continuing, you agree to our Terms of Service and Privacy
+              Policy.
             </p>
 
           </div>

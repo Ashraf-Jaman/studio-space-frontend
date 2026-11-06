@@ -358,21 +358,7 @@ export default function SignupPage() {
                 />
 
                 <span>
-                  I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    className="text-orange-500 hover:underline"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-orange-500 hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                  .
+                  I agree to the Terms of Service and Privacy Policy.
                 </span>
               </label>
 
